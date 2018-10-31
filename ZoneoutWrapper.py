@@ -32,7 +32,7 @@ class ZoneoutWrapper(tf.contrib.rnn.RNNCell):
     @property
     def output_size(self):
         return self.cell.output_size
-    
+
     def call(self, inputs, state, scope=None):
 
         output, new_state = self.cell(inputs, state, scope)
@@ -64,9 +64,14 @@ class ZoneoutWrapper(tf.contrib.rnn.RNNCell):
         
         return output, new_state
 
+    def zero_state(self, batch_size, dtype):
+        return self.cell.zero_state(batch_size, dtype)
+
 if __name__ == "__main__":
 
     cell = ZoneoutWrapper(tf.nn.rnn_cell.LSTMCell(5), zoneout_prob=(0.1, 0.2))
+    initial_state = cell.zero_state(2, tf.float32)
+
     X = np.random.randn(2, 3, 4).astype(np.float32)
     X[1, 2 : ] = 0
     X_lengths = [3, 2]
@@ -75,6 +80,7 @@ if __name__ == "__main__":
                         cell,
                         X,
                         sequence_length=X_lengths,
+                        initial_state=initial_state,
                         dtype=tf.float32,
                         scope="zoneout")
 
